@@ -1,9 +1,13 @@
 ### configuration file for odf_process_all.py
 #
 # TODO: organize these by editable/fixed variables
+from importlib import resources
+
 import yaml
 
-with open("user_settings.yaml", "r") as f:
+# with resources.open_text("ctdcal", "user_settings.yaml") as f:    #   Python 3.8
+#     settings = yaml.safe_load(f)
+with resources.files("ctdcal").joinpath("user_settings.yaml").open('r') as f:
     settings = yaml.safe_load(f)
 
 # Unpack user settings (any sanitizing/checks needed? probably)
@@ -57,9 +61,9 @@ column = {
     "sal": "CTDSAL",
     # "s1": "CTDSAL1",  # TODO: calc salinity from primary and secondary sensors
     # "s2": "CTDSAL2",
-    "rinko_oxy": "FREE1",  # CHECK THIS!
+    "rinko_oxy": "U_DEF_poly1",  # CHECK THIS!
     "oxyvolts": "CTDOXYVOLTS",
-    "refT": "T90",
+    "refT": "REFTMP",
     "refC": "BTLCOND",
     "refS": "SALNTY",
     "refO": "OXYGEN",

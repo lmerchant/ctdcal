@@ -5,46 +5,35 @@ sensors.
 """
 
 import logging
-import os.path
-import types
-
-from . import *
-from ._version import get_versions
+import pathlib
+from importlib import resources
+from importlib.metadata import PackageNotFoundError, version
 
 log = logging.getLogger(__name__)
-__version__ = get_versions()["version"]
-del get_versions
+
+try:
+    __version__ = version(__name__)
+except PackageNotFoundError:
+    # package is not installed
+    pass
 
 
 def get_ctdcal_config():
     """
-    Find and load config file.
+    Find and load config file from ctdcal module folder (ctdcal/ctdcal/).
 
-    Directory search mimicked from cchdo/hdo-uow
     File read mimicked from pallets/flask
     """
-    last_dir = os.getcwd()
-    filepath = None
-    config_file = "config.py"
-
-    if os.path.exists(os.path.join(last_dir, config_file)):
-        filepath = os.path.join(last_dir, config_file)
-    else:
-        while last_dir != os.path.dirname(last_dir):
-            last_dir = os.path.dirname(last_dir)
-            if os.path.exists(os.path.join(last_dir, config_file)):
-                filepath = os.path.join(last_dir, config_file)
-                break
-    if not filepath:
-        raise FileNotFoundError(f"Failed to find config.py file in {os.getcwd()}")
-
     # compile config.py and save variables to dict
     config = {}
+    resource_path = pathlib.Path(resources.files("ctdcal"))
+    config_file_path = resource_path / "config.py"
+
     try:
-        with open(filepath, mode="rb") as f:
-            exec(compile(f.read(), filepath, "exec"), config)
+        #   Read the config file as bytes, compile the bytes, and create the 'config' dictionary
+        exec(compile(config_file_path.read_bytes(), str(config_file_path), "exec"), config)
     except OSError:
-        log.error(f"Failed to load config file {filepath}")
+        log.error(f"Failed to load config file {config_file_path}")
 
     for k in list(config.keys()):
         if k.startswith("__"):

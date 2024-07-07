@@ -9,6 +9,7 @@
 .project
 .pydevproject
 *.ipynb_*
+.idea
 
 # Compiled source #
 ###################
@@ -25,9 +26,6 @@
 ################
 # setup.py working directory
 build
-# sphinx build directory
-doc/_build
-docs/_build
 # setup.py dist directory
 dist
 # Egg metadata
@@ -53,16 +51,25 @@ data/raw/*
 data/converted/*
 data/*
 images/*
+ctdcal.log
 
 # Documentation generated files #
 #################################
+# sphinx build directory
+doc/_build
+docs/_build
+docs/generated/
 
 # pytest
 .cache
+.coverage
+htmlcov/*
 
 # Ipython notebook #
 ####################
 
 *.ipynb*
+!docs/notebooks/*.ipynb
 
 __pycache__/
+ctdcal/_version.py

@@ -1,9 +1,9 @@
-#!/usr/bin/env python
-import csv
+"""
+A module for handling continuous CTD data processing, including file write-outs.
+"""
+
 import logging
-import math
 import warnings
-from collections import OrderedDict
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -12,10 +12,7 @@ import numpy as np
 import pandas as pd
 import scipy.signal as sig
 
-from . import flagging as flagging
-from . import get_ctdcal_config
-from . import oxy_fitting as oxy_fitting
-from . import report_ctd as report_ctd
+from . import get_ctdcal_config, io, oxy_fitting
 
 cfg = get_ctdcal_config()
 log = logging.getLogger(__name__)
@@ -69,7 +66,7 @@ def cast_details(df, ssscc, log_file=None):
     b_lon = float(np.around(df_cast["GPSLON"][p_max_ind], 4))
     b_alt = float(np.around(df_cast["ALT"][p_max_ind], 4))
 
-    report_ctd.report_cast_details(
+    io.write_cast_details(
         ssscc,
         log_file,
         time_start,
@@ -370,7 +367,7 @@ def remove_on_deck(df, stacast, cond_startup=20.0, log_file=None):
 
     # Log ondeck pressures
     if log_file is not None:
-        report_ctd.report_pressure_details(stacast, log_file, start_p, end_p)
+        io.write_pressure_details(stacast, log_file, start_p, end_p)
 
     return trimmed_df
 
@@ -485,7 +482,11 @@ def binning_df(df, p_column="CTDPRS", bin_size=2):
     )
     df_out.loc[:, p_column] = df_out["bins"].astype(float)
 
-    return df_out.groupby("bins").mean()
+    try:
+        #   Python 3.8
+        return df_out.groupby("bins", observed=False).mean()
+    except TypeError:
+        return df_out.groupby("bins", observed=False).mean(numeric_only=True)
 
 
 def _fill_surface_data(df, bin_size=2):
@@ -619,19 +620,32 @@ def make_ssscc_list(fname="data/ssscc.csv"):
     """
     raw_files = Path(cfg.dirs["raw"]).glob("*.hex")
     ssscc_list = sorted([f.stem for f in raw_files])
-    pd.Series(ssscc_list).to_csv(fname, header=None, index=False, mode="x")
+    pd.Series(ssscc_list, dtype=str).to_csv(fname, header=None, index=False, mode="x")
 
     return ssscc_list
 
 
 def get_ssscc_list(fname="data/ssscc.csv"):
     """
-    Load in list of stations/casts to process.
+    Load a list of casts from a file.
+
+    Parameters
+    ----------
+    fname : path_like
+        Input file. Type is anything that can be interpreted by Python as a
+        path, such as a string or a Pathlib object.
+
+    Returns
+    -------
+    list
+        Cast names or identifiers, as a list of strings.
     """
     ssscc_list = []
-    with open(fname, "r") as filename:
-        ssscc_list = [line.strip() for line in filename]
-
+    with open(fname, "r") as lines:
+        for line in lines:
+            # skip comment lines
+            if not line.startswith("#"):
+                ssscc_list.append(line.strip())
     return ssscc_list
 
 

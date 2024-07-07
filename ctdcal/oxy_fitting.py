@@ -17,7 +17,6 @@ from . import ctd_plots as ctd_plots
 from . import flagging as flagging
 from . import get_ctdcal_config
 from . import process_ctd as process_ctd
-from . import sbe_reader as sbe_rd
 
 cfg = get_ctdcal_config()
 log = logging.getLogger(__name__)
@@ -154,12 +153,19 @@ def gather_oxy_params(oxy_file):
     df : DataFrame
         Oxygen measurement parameters
     """
-    with open(oxy_file, newline="") as f:
-        header = f.readline()
+    titr_columns = ["V_std", "V_blank", "N_KIO3", "V_KIO3", "T_KIO3", "T_thio"]
+    try:
+        with open(oxy_file, newline="") as f:
+            header = f.readline()
 
-    param_list = header.split()[:6]
-    params = pd.DataFrame(param_list, dtype=float).transpose()
-    params.columns = ["V_std", "V_blank", "N_KIO3", "V_KIO3", "T_KIO3", "T_thio"]
+        param_list = header.split()[:6]
+        params = pd.DataFrame(param_list, dtype=float).transpose()
+        params.columns = titr_columns
+
+    except FileNotFoundError:
+        # fitting data before titration file has been received from oxygen analyst
+        log.info(f"Failed to load {oxy_file} titration file, filling with NaNs")
+        params = pd.DataFrame(np.nan, index=[0], columns=titr_columns)
 
     return params
 
@@ -466,6 +472,9 @@ def _PMEL_oxy_eq(coefs, inputs, cc=[1.92634e-4, -4.64803e-2]):
 
 
 def PMEL_oxy_weighted_residual(coefs, weights, inputs, refoxy, L_norm=2):
+    """
+    Do a weighted oxygen residual fit using PMEL's SBE43 equation.
+    """
     # TODO: optionally include other residual types
     # (abstracted from PMEL code oxygen_cal_ml.m)
     # unweighted L2: sum((ref - oxy)^2)  # if weighted fails
@@ -492,6 +501,9 @@ def match_sigmas(
     ctd_oxyvolts,
     ctd_time,
 ):
+    """
+    Density match time/btl oxy dataframes between up/downcasts.
+    """
 
     # Construct Dataframe from bottle and ctd values for merging
     btl_data = pd.DataFrame(
@@ -574,6 +586,9 @@ def match_sigmas(
 
 
 def sbe43_oxy_fit(merged_df, sbe_coef0=None, f_suffix=None):
+    """
+    Fit weighted oxygen data following match_sigmas with the option for initial coefficients.
+    """
 
     # Plot data to be fit together
     f_out = f"{cfg.fig_dirs['ox']}sbe43_residual{f_suffix}_prefit.pdf"

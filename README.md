@@ -1,5 +1,13 @@
-[![Documentation Status](https://readthedocs.org/projects/ctdcal/badge/?version=latest)](https://ctdcal.readthedocs.io/en/latest/?badge=latest)
+[![PyPI Latest Release](https://img.shields.io/pypi/v/ctdcal.svg)](https://pypi.org/project/ctdcal/)
+[![PyPI Python Versions](https://img.shields.io/pypi/pyversions/ctdcal.svg)](https://pypi.org/project/ctdcal/)
+[![Package Status](https://img.shields.io/pypi/status/ctdcal.svg)](https://pypi.org/project/ctdcal/)
+[![License](https://img.shields.io/pypi/l/ctdcal.svg)](https://github.com/cchdo/ctdcal/blob/master/LICENSE.md)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/ambv/black)
+[![Imports: isort](https://img.shields.io/badge/%20imports-isort-%231674b1?style=flat&labelColor=ef8336)](https://pycqa.github.io/isort/)
+
+
+![GH Testing](https://github.com/cchdo/ctdcal/actions/workflows/run-tests.yml/badge.svg)
+[![Documentation Status](https://readthedocs.org/projects/ctdcal/badge/?version=latest)](https://ctdcal.readthedocs.io/en/latest/?badge=latest)
 
 # ctdcal project
 
@@ -10,136 +18,62 @@ In the future, parts of the ctdcal library will be split off into additional pac
 such as an "ocean sensors" package with Python implementations of conversion routines
 for in-situ sensors used for ocean measurement.
 
-***
+---
+
 ## Installation
-### Clone repository
-Pull down the latest version of ctdcal:
+ctdcal can be installed using pip:
+
 ```
-git clone https://github.com/cchdo/ctdcal.git
+$ pip install ctdcal
 ```
 
-### Install ctdcal and dependencies
-Change directories to the top-level ctdcal:
-```
-cd ctdcal
-```
+---
 
-Create a new virtual environment with your preferred environment manager and install with pip:
-```
-pip install .
-```
-
-Note: there is an occasional (conda?) bug where CLI tools are not immediately accessible after install – this can usually be remedied by deactivating and reactiving the virtual environment.
-
+## CLI usage
+### Initialize data folders
 Initialize default `/data/` folders by running:
+
 ```
-ctdcal init
+$ ctdcal init
 ```
 
 (Future versions of ctdcal are planned have more robust init options/flags/etc.)
-
-***
-## Usage
 
 ### Import and process data
 To process data, copy over raw `.hex` and `.xmlcon` files into `/data/raw/` and reference data to their appropriate folder (`oxygen`, `reft`, `salt`).
 
 Users can process their data with individual ctdcal functions or try:
+
 ```
-ctdcal process [--group ODF]
+$ ctdcal process [--group ODF]
 ```
+
 to process using ODF procedures.
 
-<!-- 
-## Overview of available commands
-this is outdated but a good template possibly
+---
 
-#### Utility for converting Seabird Electronics .hex/.XMLCON raw data into csv-formatted text files
-```
-usage: odf_convert_sbe.py [-h] [-d] [-r] [-o destDir] hex_file XMLCON_file
+## Package usage
+### Explore user settings
+Most ctdcal functions get settings from `user_settings.yaml` and subsequently `config.py`. Call the configuration loader to explore default settings:
 
-positional arguments:
-  hex_file      the .hex data file to process
-  XMLCON_file   the .XMLCON data file to process
+```py
+from ctdcal import get_ctdcal_config
+cfg = get_ctdcal_config()
 
-optional arguments:
-  -h, --help    show this help message and exit
-  -d, --debug   display debug messages
-  -r, --raw     return the raw data values
-  -o dest_dir   location to save output files
-```
+# directories for I/O purposes
+print(cfg.dirs)
+print(cfg.fig_dirs)
 
-#### Utility for extracting Niskin bottle firing related data from converted csv-formatted text files
+# experiment-specific settings (e.g., expocode, CTD serial number) from user_settings.yaml
+print(cfg.settings)
 
-```
-usage: bottle.py [-h] [-o output file] [-d] cnv_file
-
-positional arguments:
-  cnv_file  the converted csv-formatted file to process
-
-optional arguments:
-  -h, --help      show this help message and exit
-  -o output_file  name and location of output file
-  -d, --debug     display debug messages
+# dictionary mapping of short/long column names
+print(cfg.columns)
 ```
 
-#### Utility for processing ctd sensor related data from converted csv-formatted text files
+As ctdcal continues to be developed, more robust [tutorials](https://ctdcal.readthedocs.io/en/latest/tutorials.html) will be added to [our documentation](https://ctdcal.readthedocs.io/en/latest/).
 
-```
-usage: odf_process_ctd.py [-h] [-d] [-i cnv_file] [-o dest_dir] ini_file
+---
 
-positional arguments:
-  ini_file     the .ini file to use for processing
-
-optional arguments:
-  -h, --help   show this help message and exit
-  -d, --debug  display debug messages
-  -i cnv_file  the converted, csv-formatted ctd data to process, this
-               argument overrides any data file specified in the .ini file
-  -o dest_dir  location to save output files
-```
-
-#### Sample Script for importing converted SBE Data
-```
-usage: sampleImport.py [-h] [-d] converted_File
-
-positional arguments:
-  cnv_file  the converted, csv-formatted data file to process
-
-optional arguments:
-  -h, --help      show this help message and exit
-  -d, --debug     display debug messages
-```  
-
-#### Sample Script for exporting Pandas dataframes to csv-formatted text files with the CLIVAR 2-row header record.
-
-```
-usage: sampleExport.py [-h] [-d] [-w] converted_file output_file
-
-positional arguments:
-  cnv_file     the converted, csv-formatted data file to import to a dataframe
-  output_file  the filename to export the dataframe to
-
-optional arguments:
-  -h, --help       show this help message and exit
-  -d, --debug      display debug messages
-  -w, --overwrite  overwrite the pre-existing output file if found
-```
-
-#### Sample Script for converting raw SBE Data
-```
-usage: sampleConvert.py [-h] [-d] hex_file XMLCON_file
-
-positional arguments:
-  hex_file     the .hex data file to process
-  XMLCON_file  the .XMLCON data file to process
-
-optional arguments:
-  -h, --help   show this help message and exit
-  -d, --debug  display debug messages
-``` 
--->
-
-***
 ## LICENSING
 BSD 3-clause
